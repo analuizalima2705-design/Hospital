@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#392f36">
+    <title>Painel de chamadas | Hospital Santa Luiza</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background: #071a30;
+            color: #f8fbff;
+        }
+
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+
+        body {
+            min-width: 320px;
+            min-height: 100vh;
+            margin: 0;
+            padding: clamp(18px, 3vw, 42px);
+            background:
+                radial-gradient(ellipse at 50% -20%, rgba(37, 99, 235, .35), transparent 58%),
+                linear-gradient(145deg, #0c2543, #071a30 58%, #061426);
+        }
+
+        .screen {
+            width: min(100%, 1720px);
+            min-height: calc(100vh - clamp(36px, 6vw, 84px));
+            margin: 0 auto;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: clamp(18px, 2vw, 30px);
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand img { width: clamp(44px, 5vw, 64px); }
+
+        .brand-name {
+            margin: 0;
+            font-size: clamp(1.15rem, 2vw, 1.8rem);
+            font-weight: 750;
+            letter-spacing: .02em;
+        }
+
+        .brand-caption {
+            margin: 4px 0 0;
+            color: #a9bfd9;
+            font-size: clamp(.78rem, 1vw, .98rem);
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: #c6d6e9;
+            font-size: clamp(.78rem, 1vw, .95rem);
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #fbbf24;
+            box-shadow: 0 0 14px rgba(251, 191, 36, .55);
+        }
+
+        .status[data-state="online"] .status-dot {
+            background: #34d399;
+            box-shadow: 0 0 14px rgba(52, 211, 153, .6);
+        }
+
+        .status[data-state="offline"] .status-dot {
+            background: #fb7185;
+            box-shadow: 0 0 14px rgba(251, 113, 133, .55);
+        }
+
+        .content {
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, .34fr);
+            gap: clamp(18px, 2vw, 30px);
+        }
+
+        .panel {
+            border: 1px solid rgba(190, 215, 245, .15);
+            border-radius: clamp(22px, 2.4vw, 36px);
+            background: linear-gradient(145deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .045));
+            box-shadow: 0 24px 70px rgba(0, 0, 0, .22), inset 0 1px rgba(255, 255, 255, .08);
+        }
+
+        .current-call {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 440px;
+            padding: clamp(28px, 5vw, 72px);
+            text-align: center;
+            background:
+                radial-gradient(ellipse at 50% 115%, rgba(56, 189, 248, .2), transparent 50%),
+                linear-gradient(145deg, #f8fbff, #e4effd);
+            color: #102b4d;
+        }
+
+        .eyebrow {
+            margin: 0;
+            color: #426487;
+            font-size: clamp(.85rem, 1.4vw, 1.2rem);
+            font-weight: 750;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+        }
+
+        .patient-name {
+            max-width: 100%;
+            margin: clamp(20px, 3vw, 42px) 0;
+            color: #103b70;
+            font-size: clamp(2.6rem, 8vw, 8.5rem);
+            font-weight: 800;
+            line-height: 1.05;
+            overflow-wrap: anywhere;
+        }
+
+        .ticket-number {
+            margin: 0;
+            color: #087e83;
+            font-size: clamp(2rem, 5vw, 4.5rem);
+            font-weight: 900;
+            letter-spacing: .08em;
+            line-height: 1;
+        }
+
+        .location {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(12px, 2vw, 24px);
+            padding: 14px clamp(18px, 3vw, 38px);
+            border: 1px solid rgba(37, 99, 235, .16);
+            border-radius: 22px;
+            background: rgba(37, 99, 235, .08);
+        }
+
+        .location-label {
+            color: #426487;
+            font-size: clamp(.8rem, 1.2vw, 1.05rem);
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .location-number {
+            color: #1d4ed8;
+            font-size: clamp(2.7rem, 6vw, 5.8rem);
+            font-weight: 850;
+            line-height: 1;
+        }
+
+        .waiting-message {
+            max-width: 620px;
+            margin: 0;
+            color: #506b89;
+            font-size: clamp(1rem, 1.8vw, 1.5rem);
+            line-height: 1.5;
+        }
+
+        .history {
+            display: flex;
+            flex-direction: column;
+            padding: clamp(22px, 2.5vw, 36px);
+        }
+
+        .history-heading {
+            margin: 0;
+            font-size: clamp(1.15rem, 1.7vw, 1.55rem);
+        }
+
+        .history-caption {
+            margin: 8px 0 20px;
+            color: #a9bfd9;
+            font-size: clamp(.82rem, 1vw, .95rem);
+        }
+
+        #history-list {
+            display: grid;
+            gap: 12px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        #history-list li {
+            padding: 15px 16px;
+            border: 1px solid rgba(190, 215, 245, .12);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .055);
+        }
+
+        .history-patient {
+            display: block;
+            margin-bottom: 5px;
+            color: #f5f9ff;
+            font-size: clamp(.95rem, 1.15vw, 1.08rem);
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .history-location {
+            color: #a9bfd9;
+            font-size: clamp(.8rem, .95vw, .9rem);
+        }
+
+        .history-empty {
+            color: #a9bfd9;
+            font-size: .95rem;
+        }
+
+        .flash { animation: call-flash .8s ease 2; }
+
+        @keyframes call-flash {
+            0%, 100% { box-shadow: 0 24px 70px rgba(0, 0, 0, .22); }
+            50% { box-shadow: 0 0 0 8px rgba(56, 189, 248, .45), 0 24px 70px rgba(0, 0, 0, .22); }
+        }
+
+        @media (max-width: 850px) {
+            body { padding: 18px; }
+            .screen { min-height: calc(100vh - 36px); }
+            .content { grid-template-columns: 1fr; }
+            .current-call { min-height: 52vh; }
+            .history { min-height: 190px; }
+            #history-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 520px) {
+            .topbar { align-items: flex-start; }
+            .brand { gap: 10px; }
+            .status { padding-top: 8px; }
+            .status-label { display: none; }
+            .current-call { min-height: 42vh; padding: 24px 16px; }
+            .patient-name { font-size: clamp(2.4rem, 12vw, 4rem); }
+            .location { gap: 12px; padding: 12px 18px; }
+            #history-list { grid-template-columns: 1fr; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .01ms !important; }
+        }
+
+        .embedded body {
+            min-width: 0;
+            min-height: 0;
+            padding: 12px;
+        }
+
+        .embedded .screen {
+            width: 100%;
+            min-height: 0;
+            gap: 12px;
+        }
+
+        .embedded .brand img { width: 38px; }
+        .embedded .content { grid-template-columns: 1fr; gap: 12px; }
+        .embedded .current-call { min-height: 210px; padding: 18px; }
+        .embedded .patient-name { margin: 12px 0; font-size: clamp(2rem, 7vw, 3.5rem); }
+        .embedded .location-number { font-size: 2.5rem; }
+        .embedded .history { min-height: 0; padding: 16px; }
+        .embedded .history-caption { margin-bottom: 12px; }
+        .embedded #history-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    </style>
+    <script>
+        if (new URLSearchParams(window.location.search).has("embed")) {
+            document.documentElement.classList.add("embedded");
+        }
+    </script>
+    <link rel="stylesheet" href="theme.css">
+</head>
+<body class="tv-page">
+    <main class="screen">
+        <header class="topbar">
+            <div class="brand">
+                <img src="brand-mark.svg" alt="">
+                <div>
+                    <p class="brand-name">Hospital Santa Luiza</p>
+                    <p class="brand-caption">Painel de chamadas</p>
+                </div>
+            </div>
+            <div class="status" id="connection-status" data-state="connecting" role="status" aria-live="polite">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span class="status-label" id="connection-label">Conectando...</span>
+            </div>
+        </header>
+
+        <div class="content">
+            <section class="panel current-call" id="current-call" aria-live="polite">
+                <p class="eyebrow" id="call-heading">Aguardando próxima chamada</p>
+                <p class="ticket-number" id="ticket-number" hidden></p>
+                <h1 class="patient-name" id="patient-name">Aguardando senha</h1>
+                <div class="location" id="call-location" hidden>
+                    <span class="location-label" id="local-tipo">Guichê</span>
+                    <span class="location-number" id="local-numero">--</span>
+                </div>
+                <p class="waiting-message" id="waiting-message">Sua senha e o local de atendimento aparecerão aqui quando você for chamado.</p>
+            </section>
+
+            <aside class="panel history" aria-labelledby="history-heading">
+                <h2 class="history-heading" id="history-heading">Chamadas anteriores</h2>
+                <p class="history-caption">Últimas senhas chamadas</p>
+                <ul id="history-list">
+                    <li class="history-empty">Nenhuma chamada recente.</li>
+                </ul>
+            </aside>
+        </div>
+    </main>
+
+    <script>
+        const statusElement = document.getElementById("connection-status");
+        const statusLabel = document.getElementById("connection-label");
+        const callPanel = document.getElementById("current-call");
+        const callHeading = document.getElementById("call-heading");
+        const ticketNumber = document.getElementById("ticket-number");
+        const patientName = document.getElementById("patient-name");
+        const callLocation = document.getElementById("call-location");
+        const localType = document.getElementById("local-tipo");
+        const localNumber = document.getElementById("local-numero");
+        const waitingMessage = document.getElementById("waiting-message");
+        const historyList = document.getElementById("history-list");
+        const apiOrigin = new URLSearchParams(window.location.search).get("api");
+        const chamadaUrl = apiOrigin
+            ? new URL("/tv/chamada", apiOrigin).href
+            : window.location.protocol === "file:"
+                ? null
+                : new URL("/tv/chamada", window.location.origin).href;
+        let ultimoId = null;
+
+        function renderHistory(historico) {
+            historyList.replaceChildren();
+            const chamadas = Array.isArray(historico) ? historico.slice(0, 4) : [];
+
+            if (!chamadas.length) {
+                const empty = document.createElement("li");
+                empty.className = "history-empty";
+                empty.textContent = "Nenhuma chamada recente.";
+                historyList.appendChild(empty);
+                return;
+            }
+
+            chamadas.forEach(item => {
+                const entry = document.createElement("li");
+                const patient = document.createElement("span");
+                const location = document.createElement("span");
+                patient.className = "history-patient";
+                location.className = "history-location";
+                patient.textContent = item.senha ? `Senha ${item.senha}` : "Chamada anterior";
+                location.textContent = `${item.localTipo || "Guichê"} ${item.localNumero || "--"}`;
+                entry.append(patient, location);
+                historyList.appendChild(entry);
+            });
+        }
+
+        function renderCall(chamada) {
+            if (!chamada) {
+                callHeading.textContent = "Aguardando próxima chamada";
+                ticketNumber.textContent = "";
+                ticketNumber.hidden = true;
+                patientName.textContent = "Aguardando senha";
+                localType.textContent = "Guichê";
+                localNumber.textContent = "--";
+                callLocation.hidden = true;
+                waitingMessage.hidden = false;
+                waitingMessage.textContent = "Sua senha e o local de atendimento aparecerão aqui quando você for chamado.";
+                ultimoId = null;
+                return;
+            }
+
+            const callId = chamada.id ?? `${chamada.senha || ""}-${chamada.createdAt || ""}`;
+            callHeading.textContent = chamada.senha ? "Senha chamada" : "Chamada realizada";
+            ticketNumber.textContent = chamada.senha ? `Senha ${chamada.senha}` : "";
+            ticketNumber.hidden = !chamada.senha;
+            patientName.textContent = chamada.senha ? "Dirija-se ao atendimento" : "Chamada realizada";
+            localType.textContent = chamada.localTipo || "Guichê";
+            localNumber.textContent = chamada.localNumero || "--";
+            callLocation.hidden = false;
+            waitingMessage.hidden = true;
+
+            if (callId !== ultimoId) {
+                ultimoId = callId;
+                callPanel.classList.remove("flash");
+                void callPanel.offsetWidth;
+                callPanel.classList.add("flash");
+            }
+        }
+
+        async function atualizar() {
+            try {
+                if (!chamadaUrl) {
+                    throw new Error("Abra a TV pelo endereço do servidor ou informe o parâmetro api.");
+                }
+
+                const response = await fetch(chamadaUrl, { cache: "no-store" });
+                if (!response.ok) {
+                    throw new Error(`Falha ao consultar chamadas (${response.status})`);
+                }
+
+                const data = await response.json();
+                renderCall(data.chamada || null);
+                renderHistory(data.historico);
+                statusElement.dataset.state = "online";
+                statusLabel.textContent = "Sistema conectado";
+            } catch (error) {
+                statusElement.dataset.state = "offline";
+                statusLabel.textContent = "Sem conexão";
+                callHeading.textContent = "Não foi possível atualizar";
+                patientName.textContent = "Painel indisponível";
+                callLocation.hidden = true;
+                waitingMessage.hidden = false;
+                waitingMessage.textContent = chamadaUrl
+                    ? "Verifique se o servidor está ligado e se a TV está na mesma rede."
+                    : "Abra tv.html pelo endereço do servidor (ex.: http://IP-DO-SERVIDOR:3000/tv.html), ou use ?api=http://IP-DO-SERVIDOR:3000.";
+                console.error("Erro ao atualizar o painel da TV:", error);
+            }
+        }
+
+        atualizar();
+        setInterval(atualizar, 2000);
+    </script>
+</body>
+</html>

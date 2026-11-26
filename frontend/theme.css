@@ -1,0 +1,454 @@
+:root {
+  --brand-navy: #4b3b44;
+  --brand-blue: #9a6f7e;
+  --brand-blue-dark: #76515f;
+  --brand-teal: #617b6d;
+  --brand-green: #617b6d;
+  --brand-ink: #4b3b44;
+  --brand-muted: #766b71;
+  --brand-line: #e5d9dd;
+  --brand-surface: #fffdfb;
+  --brand-canvas: #f7f1ee;
+  --rose-blush: #e8bec8;
+  --rose-antique: #c995a5;
+  --lavender: #d9cde3;
+  --sage: #c9d8cb;
+  --off-white: #f7f1ee;
+  --dark-mauve: #76616d;
+}
+
+body:not(.tv-page) {
+  color: var(--brand-ink);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body:not(.tv-page):not(.login-page) {
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(232, 190, 200, 0.26), transparent 34rem),
+    radial-gradient(ellipse at 92% 8%, rgba(201, 216, 203, 0.28), transparent 30rem),
+    var(--brand-canvas);
+}
+
+body:not(.tv-page) input,
+body:not(.tv-page) select,
+body:not(.tv-page) textarea {
+  font: inherit;
+  border-color: var(--brand-line);
+  border-radius: 10px;
+  color: var(--brand-ink);
+  background-color: #fffdfb;
+}
+
+body:not(.tv-page) input:focus,
+body:not(.tv-page) select:focus,
+body:not(.tv-page) textarea:focus {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(154, 111, 126, 0.16);
+}
+
+body:not(.tv-page) h1,
+body:not(.tv-page) h2,
+body:not(.tv-page) h3 {
+  color: var(--brand-navy);
+}
+
+body:not(.tv-page) .eyebrow {
+  color: var(--brand-teal);
+}
+
+body:not(.tv-page) .panel,
+body:not(.tv-page) .card,
+body:not(.tv-page) .queue-panel,
+body:not(.tv-page) .consult-panel,
+body:not(.tv-page) .tv-panel,
+body:not(.tv-page) .registration-panel,
+body:not(.tv-page) .form-panel,
+body:not(.tv-page) .table-panel,
+body:not(.tv-page) .summary-card,
+body:not(.tv-page) .stat-card {
+  border-color: var(--brand-line);
+  border-radius: 16px;
+  background-color: var(--brand-surface);
+  box-shadow: 0 10px 28px rgba(76, 57, 68, 0.07);
+}
+
+body:not(.tv-page) .page-header {
+  border-color: var(--brand-line);
+}
+
+body:not(.tv-page) .brand small,
+body:not(.tv-page) .intro-copy,
+body:not(.tv-page) .page-description,
+body:not(.tv-page) .section-heading p:not(.eyebrow),
+body:not(.tv-page) .panel-header p,
+body:not(.tv-page) .form-status,
+body:not(.tv-page) .updated-at,
+body:not(.tv-page) .stat-label,
+body:not(.tv-page) .risk-item,
+body:not(.tv-page) .empty-state,
+body:not(.tv-page) .patient-card p,
+body:not(.tv-page) .prescription-card time,
+body:not(.tv-page) .triage-details p {
+  color: var(--brand-muted);
+}
+
+body:not(.tv-page) .brand strong,
+body:not(.tv-page) .section-heading h2,
+body:not(.tv-page) .panel-header h2,
+body:not(.tv-page) .list-toolbar h2 {
+  color: var(--brand-navy);
+}
+
+body:not(.tv-page) label,
+body:not(.tv-page) th,
+body:not(.tv-page) td {
+  color: #675760;
+}
+
+body:not(.tv-page) .summary-card strong,
+body:not(.tv-page) .prescription-card strong,
+body:not(.tv-page) .prescription-medication,
+body:not(.tv-page) .risk-item b {
+  color: #76515f;
+}
+
+body:not(.tv-page) .page-nav a,
+body:not(.tv-page) .module-nav a {
+  color: #675760;
+}
+
+body:not(.tv-page) .page-nav a:hover,
+body:not(.tv-page) .module-nav a:hover {
+  color: var(--brand-blue-dark);
+  background: rgba(232, 190, 200, 0.32);
+}
+
+body:not(.tv-page) button:not(.ghost-btn):not(.tab-btn):not(.chip):not(.btn-danger-sm):not(.btn-secondary):not(.secondary-button):not(.btn-sm):not(.btn-full) {
+  border-radius: 10px;
+  background: var(--dark-mauve);
+  color: #fffdfb;
+}
+
+body:not(.tv-page) .primary-button,
+body:not(.tv-page) .tv-button,
+body:not(.tv-page) .save-button,
+body:not(.tv-page) .select-button,
+body:not(.tv-page) .user-form button,
+body:not(.tv-page) .btn-purple,
+body:not(.tv-page) .btn-success,
+body:not(.tv-page) .btn-full,
+body:not(.tv-page) .btn-sm:not(.btn-secondary):not(.btn-danger-sm),
+body:not(.tv-page) .call-button,
+body:not(.tv-page) .finish-button,
+body:not(.tv-page) .btn-abrir-tv {
+  border-color: transparent;
+  background: var(--dark-mauve);
+  color: #fffdfb;
+}
+
+body:not(.tv-page) .primary-button:hover,
+body:not(.tv-page) .tv-button:hover,
+body:not(.tv-page) .save-button:hover,
+body:not(.tv-page) .select-button:hover,
+body:not(.tv-page) .user-form button:hover,
+body:not(.tv-page) .btn-purple:hover,
+body:not(.tv-page) .btn-success:hover,
+body:not(.tv-page) .btn-full:hover,
+body:not(.tv-page) .btn-sm:not(.btn-secondary):not(.btn-danger-sm):hover,
+body:not(.tv-page) .call-button:hover,
+body:not(.tv-page) .finish-button:hover,
+body:not(.tv-page) .btn-abrir-tv:hover {
+  background: #5d4a55;
+}
+
+body:not(.tv-page) .secondary-button,
+body:not(.tv-page) .btn-secondary,
+body:not(.tv-page) .ghost-btn {
+  border-color: #e3d3d9;
+  background: #f3e7ea;
+  color: #5b4751;
+}
+
+body:not(.tv-page) .side-nav a:hover,
+body:not(.tv-page) .side-nav a.active {
+  background: rgba(255, 253, 251, 0.14);
+}
+
+body:not(.tv-page) .sidebar {
+  background: #5b4751;
+}
+
+body:not(.tv-page) .brand-box strong {
+  color: #fffdfb;
+}
+
+body:not(.tv-page) .brand-box small {
+  color: #e1d3d9;
+}
+
+body:not(.tv-page) .brand-mark {
+  background: #f3e7ea;
+}
+
+body:not(.tv-page) .tab-btn.active,
+body:not(.tv-page) .chip.active {
+  border-color: #dfc5ce;
+  background: #f3e7ea;
+  color: #5b4751;
+}
+
+body:not(.tv-page) .refresh-button,
+body:not(.tv-page) .queue-indicator {
+  border-color: var(--brand-line);
+  background: #f3e7ea;
+  color: #5b4751;
+}
+
+body:not(.tv-page) .chart-triage {
+  stroke: #9a6f7e;
+}
+
+body:not(.tv-page) .chart-dot-triage,
+body:not(.tv-page) .legend i {
+  fill: #9a6f7e;
+  background: #9a6f7e;
+}
+
+body:not(.tv-page) .chart-consults {
+  stroke: #617b6d;
+}
+
+body:not(.tv-page) .chart-dot-consults,
+body:not(.tv-page) .legend .consults-dot {
+  fill: #617b6d;
+  background: #617b6d;
+}
+
+body:not(.tv-page) .stat-card.blue,
+body:not(.tv-page) .stat-card.orange,
+body:not(.tv-page) .stat-card.purple {
+  color: #9a6f7e;
+}
+
+body:not(.tv-page) .stat-card.green {
+  color: #617b6d;
+}
+
+body:not(.tv-page) .badge {
+  color: #5b4751;
+  background: #f3e7ea;
+}
+
+body:not(.tv-page) .risk-dot.red {
+  background: #c94b46;
+}
+
+body:not(.tv-page) .risk-dot.yellow {
+  background: #d6a53e;
+}
+
+body:not(.tv-page) .risk-dot.green {
+  background: #617b6d;
+}
+
+body:not(.tv-page) .status-dot {
+  background: #617b6d;
+  box-shadow: 0 0 0 4px rgba(97, 123, 109, 0.14);
+}
+
+body:not(.tv-page) .tv-fullscreen-link,
+body:not(.tv-page) .logout-link {
+  color: var(--brand-blue-dark);
+}
+
+body:not(.tv-page) .status-aguardando_atendimento {
+  color: #5b4751;
+  background: #f3e7ea;
+}
+
+body:not(.tv-page) .status-em_atendimento {
+  color: #805817;
+  background: #fff2d6;
+}
+
+body:not(.tv-page) .status-triado {
+  color: #355b46;
+  background: #e4eee6;
+}
+
+body.tv-page .ticket,
+body.tv-page .patient-name,
+body.tv-page .section-title {
+  color: #e8bec8;
+}
+
+body.tv-page .login-panel button,
+body.tv-page .top-actions a,
+body.tv-page .top-actions button {
+  border-color: rgba(232, 190, 200, 0.35);
+  background: #76616d;
+  color: #fffdfb;
+}
+
+body.tv-page .login-panel input {
+  border-color: rgba(232, 190, 200, 0.3);
+}
+
+body.tv-page .login-panel label,
+body.tv-page .clinical-item strong {
+  color: #e1d3d9;
+}
+
+body.tv-page .clinical-item,
+body.tv-page .history-entry {
+  border-color: rgba(247, 241, 238, 0.16);
+  background: rgba(255, 253, 251, 0.07);
+}
+
+body:not(.tv-page) .status-triagem,
+body:not(.tv-page) .status-aguardando_triagem,
+body:not(.tv-page) .status-em_triagem {
+  background: #eee8f2;
+  color: #5e4d68;
+}
+
+body:not(.tv-page) .triage-card,
+body:not(.tv-page) .patient-card,
+body:not(.tv-page) .prescription-card,
+body:not(.tv-page) .user-item {
+  border-color: var(--brand-line);
+  background-color: #fffdfb;
+}
+
+body:not(.tv-page) .triage-card.selected {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(154, 111, 126, 0.15);
+}
+
+body:not(.tv-page) .risk-badge.verde {
+  background: #e4eee6;
+  color: #355b46;
+}
+
+body:not(.tv-page) .risk-badge.amarelo {
+  background: #fff2d6;
+  color: #805817;
+}
+
+body:not(.tv-page) .risk-badge.vermelho {
+  background: #f8e1df;
+  color: #922f2b;
+}
+
+body.tv-page {
+  color: #f7f1ee;
+  background:
+    radial-gradient(ellipse at 50% -20%, rgba(201, 149, 165, 0.25), transparent 58%),
+    linear-gradient(145deg, #55434d, #392f36 58%, #2c252b);
+}
+
+body.tv-page .current-call {
+  background:
+    radial-gradient(ellipse at 50% 115%, rgba(201, 149, 165, 0.2), transparent 50%),
+    linear-gradient(145deg, #fffdfb, #f3e7ea);
+  color: #4b3b44;
+}
+
+body.tv-page .eyebrow,
+body.tv-page .patient-name {
+  color: #5b4751;
+}
+
+body.tv-page .ticket-number,
+body.tv-page .location-number {
+  color: #76515f;
+}
+
+body.tv-page .location {
+  border-color: rgba(154, 111, 126, 0.2);
+  background: rgba(232, 190, 200, 0.24);
+}
+
+body.tv-page .panel:not(.current-call) {
+  border-color: rgba(247, 241, 238, 0.18);
+  background: linear-gradient(145deg, rgba(255, 253, 251, 0.12), rgba(255, 253, 251, 0.05));
+}
+
+body.tv-page .current-call {
+  border-color: rgba(247, 241, 238, 0.22);
+}
+
+body.tv-page .history-caption,
+body.tv-page .history-location,
+body.tv-page .history-empty {
+  color: #e1d3d9;
+}
+
+body.tv-page #history-list li {
+  border-color: rgba(247, 241, 238, 0.14);
+  background: rgba(255, 253, 251, 0.07);
+}
+
+body.tv-page .history-patient {
+  color: #fffdfb;
+}
+
+body.tv-page .brand-caption,
+body.tv-page .status,
+body.tv-page .notice {
+  color: #e1d3d9;
+}
+
+body.tv-page .location-label,
+body.tv-page .waiting-message {
+  color: #675760;
+}
+
+body.tv-page .status[data-state="online"] .status-dot {
+  background: #c9d8cb;
+  box-shadow: 0 0 14px rgba(201, 216, 203, 0.6);
+}
+
+body.tv-page .status[data-state="offline"] .status-dot {
+  background: #e8bec8;
+  box-shadow: 0 0 14px rgba(232, 190, 200, 0.55);
+}
+
+body:not(.tv-page) input:focus-visible,
+body:not(.tv-page) select:focus-visible,
+body:not(.tv-page) textarea:focus-visible,
+body:not(.tv-page) button:focus-visible,
+body:not(.tv-page) a:focus-visible {
+  outline: 3px solid rgba(154, 111, 126, 0.3);
+  outline-offset: 2px;
+}
+
+body:not(.tv-page) button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not(.tv-page) *,
+  body:not(.tv-page) *::before,
+  body:not(.tv-page) *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body.tv-page .risk.verde {
+  color: #243f30;
+  background: #c9d8cb;
+}
+
+body.tv-page .risk.amarelo {
+  color: #4c3712;
+  background: #f2d89e;
+}
+
+body.tv-page .risk.vermelho {
+  color: #632724;
+  background: #e8bec8;
+}

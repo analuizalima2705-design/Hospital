@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#76616d">
+  <title>Guichê — Atendimento ao Paciente | Hospital Santa Luiza</title>
+  <link rel="stylesheet" href="atendimento.css">
+  <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+  <main class="workspace">
+    <header class="page-header">
+      <a class="brand" href="index.html">
+        <img src="brand-mark.svg" alt="" class="brand-logo">
+        <span><strong>Hospital Santa Luiza</strong><small>Recepção e atendimento</small></span>
+      </a>
+      <nav class="page-nav" aria-label="Navegação principal">
+        <a href="triagem.html">Triagem</a>
+        <a href="medico.html">Painel médico</a>
+        <a href="medicacoes.html">Medicações</a>
+        <a href="almoxarifado.html">Almoxarifado</a>
+        <a href="index.html">Sair</a>
+      </nav>
+    </header>
+
+    <section class="page-intro">
+      <div>
+        <p class="eyebrow">Área de recepção</p>
+        <h1>Guichê — Atendimento ao Paciente</h1>
+        <p class="intro-copy">Cadastre pacientes, organize a fila e encaminhe cada atendimento para a triagem.</p>
+      </div>
+      <a class="tv-button" href="tv.html" target="_blank" rel="noopener noreferrer">Abrir painel de chamadas</a>
+    </section>
+
+    <section class="content-grid">
+      <section class="panel registration-panel" aria-labelledby="registration-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Novo registro</p>
+            <h2 id="registration-title">Cadastrar paciente</h2>
+            <p>Após o cadastro, o paciente ficará aguardando no guichê.</p>
+          </div>
+        </div>
+        <form id="registrationForm">
+          <label for="nome">Nome completo</label>
+          <input id="nome" name="nome" type="text" autocomplete="name" maxlength="120" placeholder="Ex.: Maria da Silva" required>
+
+          <label for="cpf">CPF ou documento</label>
+          <input id="cpf" name="cpf" type="text" inputmode="text" autocomplete="off" maxlength="32" placeholder="Informe o documento do paciente" required>
+
+          <label for="tipo">Tipo de atendimento</label>
+          <select id="tipo" name="tipo" required>
+            <option value="Convenio">Convênio</option>
+            <option value="Particular">Particular</option>
+          </select>
+
+          <button class="primary-button" id="registerButton" type="submit">Cadastrar e incluir na fila</button>
+          <p id="formStatus" class="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="panel queue-panel" aria-labelledby="queue-title">
+        <div class="section-heading queue-heading">
+          <div>
+            <p class="eyebrow">Acompanhamento</p>
+            <h2 id="queue-title">Fila de atendimento</h2>
+            <p id="queueSummary" aria-live="polite">Carregando pacientes...</p>
+          </div>
+          <button class="secondary-button" id="refreshQueue" type="button">Atualizar fila</button>
+        </div>
+
+        <div class="queue-filters">
+          <div class="search-field">
+            <label for="search">Buscar paciente</label>
+            <input id="search" type="search" placeholder="Nome ou CPF" autocomplete="off">
+          </div>
+          <div class="filter-field">
+            <label for="statusFilter">Filtrar por status</label>
+            <select id="statusFilter">
+              <option value="todos">Todos os status</option>
+              <option value="aguardando_atendimento">Aguardando guichê</option>
+              <option value="em_atendimento">Em atendimento</option>
+              <option value="triagem">Aguardando triagem</option>
+              <option value="em_triagem">Em triagem</option>
+              <option value="triado">Triagem concluída</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Paciente</th>
+                <th scope="col">Senha</th>
+                <th scope="col">Documento</th>
+                <th scope="col">Atendimento</th>
+                <th scope="col">Entrada</th>
+                <th scope="col">Status</th>
+                <th scope="col"><span class="visually-hidden">Ação</span></th>
+              </tr>
+            </thead>
+            <tbody id="queueRows">
+              <tr><td class="table-message" colspan="7">Carregando fila...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p id="queueStatus" class="form-status" role="status" aria-live="polite"></p>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("registrationForm");
+    const formStatus = document.getElementById("formStatus");
+    const registerButton = document.getElementById("registerButton");
+    const queueRows = document.getElementById("queueRows");
+    const queueSummary = document.getElementById("queueSummary");
+    const queueStatus = document.getElementById("queueStatus");
+    const refreshButton = document.getElementById("refreshQueue");
+    const searchInput = document.getElementById("search");
+    const statusFilter = document.getElementById("statusFilter");
+    let searchTimer;
+
+    const statusLabels = {
+      aguardando_atendimento: "Aguardando guichê",
+      em_atendimento: "Em atendimento",
+      triagem: "Aguardando triagem",
+      aguardando_triagem: "Aguardando triagem",
+      em_triagem: "Em triagem",
+      triado: "Triagem concluída"
+    };
+
+    function showMessage(container, message, className) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 7;
+      cell.className = `table-message ${className || ""}`.trim();
+      cell.textContent = message;
+      row.appendChild(cell);
+      container.replaceChildren(row);
+    }
+
+    function createCell(text) {
+      const cell = document.createElement("td");
+      cell.textContent = text;
+      return cell;
+    }
+
+    function formatDate(value) {
+      const date = new Date(value);
+      if (!value || Number.isNaN(date.getTime())) return "—";
+      return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(date);
+    }
+
+    async function readApiResponse(response) {
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        if (!response.ok) throw new Error(`Erro ${response.status} ao comunicar com o servidor.`);
+        throw new Error("O servidor retornou uma resposta inválida.");
+      }
+      return response.json();
+    }
+
+    function createAction(patient) {
+      const cell = document.createElement("td");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = patient.status === "aguardando_atendimento" ? "row-button call-button" : "row-button finish-button";
+      button.textContent = patient.status === "aguardando_atendimento" ? "Chamar" : "Finalizar";
+      button.addEventListener("click", () => updateAttendance(patient, button));
+
+      if (patient.status === "aguardando_atendimento" || patient.status === "em_atendimento") {
+        cell.appendChild(button);
+      } else {
+        cell.textContent = "—";
+      }
+      return cell;
+    }
+
+    function renderPatients(patients) {
+      queueRows.replaceChildren();
+      if (!patients.length) {
+        showMessage(queueRows, "Nenhum paciente encontrado para estes filtros.");
+        return;
+      }
+
+      patients.forEach(patient => {
+        const row = document.createElement("tr");
+        const nameCell = createCell(patient.nome || "Paciente sem nome");
+        nameCell.className = "patient-name";
+        row.append(
+          nameCell,
+          createCell(patient.senha || "—"),
+          createCell(patient.cpf || "—"),
+          createCell(patient.tipo || "—"),
+          createCell(formatDate(patient.createdAt))
+        );
+
+        const statusCell = document.createElement("td");
+        const badge = document.createElement("span");
+        badge.className = `status-badge status-${patient.status || "desconhecido"}`;
+        badge.textContent = statusLabels[patient.status] || "Status não identificado";
+        statusCell.appendChild(badge);
+        row.append(statusCell, createAction(patient));
+        queueRows.appendChild(row);
+      });
+    }
+
+    async function loadQueue() {
+      refreshButton.disabled = true;
+      queueSummary.textContent = "Atualizando fila...";
+      showMessage(queueRows, "Carregando fila...");
+
+      const params = new URLSearchParams();
+      const search = searchInput.value.trim();
+      const status = statusFilter.value;
+      if (search) params.set("busca", search);
+      if (status !== "todos") params.set("status", status);
+
+      try {
+        const response = await fetch(`/atendimento/fila?${params.toString()}`);
+        const data = await readApiResponse(response);
+        if (!response.ok) throw new Error(data.erro || "Não foi possível carregar a fila.");
+        if (!Array.isArray(data)) throw new Error("A resposta da fila está em um formato inválido.");
+        renderPatients(data);
+        queueSummary.textContent = `${data.length} ${data.length === 1 ? "paciente localizado" : "pacientes localizados"}`;
+      } catch (error) {
+        queueSummary.textContent = "Fila indisponível";
+        showMessage(queueRows, error.message || "Erro ao carregar a fila.", "error-message");
+      } finally {
+        refreshButton.disabled = false;
+      }
+    }
+
+    async function updateAttendance(patient, button) {
+      const action = patient.status === "aguardando_atendimento" ? "iniciar" : "finalizar";
+      button.disabled = true;
+      queueStatus.textContent = "";
+      queueStatus.className = "form-status";
+      try {
+        const response = await fetch(`/atendimento/${encodeURIComponent(patient.id)}/${action}`, { method: "PUT" });
+        const data = await readApiResponse(response);
+        if (!response.ok) throw new Error(data.erro || "Não foi possível atualizar o atendimento.");
+        queueStatus.textContent = action === "iniciar"
+          ? "Paciente chamado no painel e atendimento iniciado."
+          : "Atendimento finalizado; paciente encaminhado para a triagem.";
+        queueStatus.className = "form-status success-message";
+        await loadQueue();
+      } catch (error) {
+        button.disabled = false;
+        queueStatus.textContent = error.message || "Erro ao atualizar o atendimento.";
+        queueStatus.className = "form-status error-message";
+      }
+    }
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      formStatus.textContent = "";
+      formStatus.className = "form-status";
+      registerButton.disabled = true;
+
+      try {
+        const response = await fetch("/atendimento", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nome: document.getElementById("nome").value.trim(),
+            cpf: document.getElementById("cpf").value.trim(),
+            tipo: document.getElementById("tipo").value
+          })
+        });
+        const data = await readApiResponse(response);
+        if (!response.ok) throw new Error(data.erro || "Não foi possível cadastrar o paciente.");
+        form.reset();
+        formStatus.textContent = `Senha ${data.senha} emitida; paciente incluído na fila do guichê.`;
+        formStatus.className = "form-status success-message";
+        statusFilter.value = "todos";
+        searchInput.value = "";
+        await loadQueue();
+      } catch (error) {
+        formStatus.textContent = error.message || "Erro ao cadastrar o paciente.";
+        formStatus.className = "form-status error-message";
+      } finally {
+        registerButton.disabled = false;
+      }
+    });
+
+    refreshButton.addEventListener("click", loadQueue);
+    statusFilter.addEventListener("change", loadQueue);
+    searchInput.addEventListener("input", () => {
+      window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(loadQueue, 250);
+    });
+    loadQueue();
+  </script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/login",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/atendimento",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/triagem",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/triagens",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/chamar-triagem/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/tv/chamada",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/consulta",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/consultas/:id/dispensar",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/medicacoes",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/dashboard-summary",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/usuarios",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/atendimento/fila",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/atendimento/:id/iniciar",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/atendimento/:id/finalizar",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/pacientes-triagem",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/chamar-triagem/:id",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/tv/equipe",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/consulta",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/triagem",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/estoque",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/estoque/entradas",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/estoque/movimentacoes",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/estoque/:id",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/estoque/:id/entradas",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/lista-medicacoes",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/$1"
+    }
+  ]
+}

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#76616d">
+  <title>Painel médico | Hospital Santa Luiza</title>
+  <link rel="stylesheet" href="medico.css">
+  <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+  <main class="workspace">
+    <header class="page-header">
+      <a class="brand" href="index.html">
+        <img src="brand-mark.svg" alt="" class="brand-logo">
+        <span><strong>Hospital Santa Luiza</strong><small>Atendimento clínico</small></span>
+      </a>
+      <nav class="page-nav" aria-label="Navegação principal">
+        <a href="triagem.html">Triagem</a>
+        <a href="atendimento.html">Atendimento</a>
+        <a href="medicacoes.html">Medicações</a>
+        <a href="almoxarifado.html">Almoxarifado</a>
+        <a href="tv-equipe.html">TV clínica da equipe</a>
+        <a href="index.html">Sair</a>
+      </nav>
+    </header>
+
+    <section class="page-intro">
+      <div>
+        <p class="eyebrow">Área assistencial</p>
+        <h1>Painel médico</h1>
+        <p class="intro-copy">Acompanhe a fila de pacientes e registre os atendimentos.</p>
+      </div>
+      <div class="intro-actions">
+        <div class="queue-indicator"><span class="status-dot"></span><span id="queueCount">Carregando fila...</span></div>
+        <a class="tv-button" href="#tv-panel">Ver TV de chamadas</a>
+      </div>
+    </section>
+
+    <section class="doctor-layout">
+      <div class="queue-panel">
+        <div class="section-heading">
+          <div><h2>Triagens aguardando atendimento</h2><p>Selecione um paciente para iniciar a consulta.</p></div>
+          <button class="refresh-button" id="refreshQueue" type="button">Atualizar</button>
+        </div>
+        <div id="triagens" class="triage-list" aria-live="polite"></div>
+      </div>
+
+      <div class="doctor-sidebar">
+        <section class="tv-panel" id="tv-panel" aria-labelledby="tv-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Acompanhamento</p>
+              <h2 id="tv-title">TV de chamadas</h2>
+              <p>Acompanhe aqui as chamadas atuais e recentes.</p>
+            </div>
+            <a class="tv-fullscreen-link" href="tv.html" target="_blank" rel="noopener noreferrer">Tela cheia</a>
+          </div>
+          <iframe
+            class="tv-frame"
+            src="tv.html?embed=doctor"
+            title="Painel de chamadas do Hospital Santa Luiza"
+            loading="lazy"
+            allowfullscreen
+          ></iframe>
+        </section>
+        <section class="consult-panel" aria-labelledby="consultTitle">
+          <div class="section-heading">
+            <div><p class="eyebrow">Registro clínico</p><h2 id="consultTitle">Nova consulta</h2></div>
+          </div>
+          <input id="triagemId" type="hidden">
+          <label for="paciente">Paciente selecionado</label>
+          <input id="paciente" placeholder="Escolha um paciente na fila" readonly>
+          <label for="diagnostico">Diagnóstico</label>
+          <input id="diagnostico" placeholder="Informe o diagnóstico">
+          <label for="medicacao">Medicação</label>
+          <select id="medicacao">
+            <option value="">Selecione a medicação</option>
+          </select>
+          <label for="quantidadeMedicacao">Quantidade prescrita (unidades do estoque)</label>
+          <input id="quantidadeMedicacao" type="number" min="1" step="1" value="1" required>
+          <label for="medicoResponsavel">Médico responsável</label>
+          <input id="medicoResponsavel" type="text" maxlength="120" required>
+          <label for="obs">Observações</label>
+          <textarea id="obs" placeholder="Orientações e observações clínicas"></textarea>
+          <button class="save-button" id="saveConsult" type="button">Salvar consulta</button>
+          <p id="formStatus" class="form-status" role="status"></p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let triagensCarregadas = [];
+    let salvandoConsulta = false;
+    const usuarioLogado = JSON.parse(localStorage.getItem("hospitalar_user") || "{}");
+    document.getElementById("medicoResponsavel").value = usuarioLogado.nome || usuarioLogado.usuario || "";
+
+    async function carregar() {
+      const div = document.getElementById("triagens");
+      try {
+        const response = await fetch("/triagens");
+        if (!response.ok) throw new Error("Não foi possível carregar a fila.");
+        triagensCarregadas = await response.json();
+        div.innerHTML = "";
+        document.getElementById("queueCount").textContent =
+          `${triagensCarregadas.length} ${triagensCarregadas.length === 1 ? "paciente" : "pacientes"} na fila`;
+
+        if (!triagensCarregadas.length) {
+          div.innerHTML = '<p class="empty-state">Nenhuma triagem aguardando atendimento.</p>';
+          return;
+        }
+
+        triagensCarregadas.forEach((triagem, index) => {
+          const card = document.createElement("article");
+          card.className = "triage-card";
+          const title = document.createElement("h3");
+          title.textContent = triagem.nome || "Paciente sem nome";
+          const risk = document.createElement("span");
+          risk.className = `risk-badge ${["verde", "amarelo", "vermelho"].includes(triagem.risco) ? triagem.risco : "verde"}`;
+          risk.textContent = triagem.risco || "Não classificado";
+          const info = document.createElement("div");
+          info.className = "triage-details";
+          [
+            ["Sintoma", triagem.sintoma || triagem.sintomas || "Não informado"],
+            ["Temperatura", triagem.temperatura ?? triagem.temp ? `${triagem.temperatura ?? triagem.temp} °C` : "Não informada"],
+            ["Alergia", triagem.alergia || "Nenhuma informada"],
+            ["Observação", triagem.observacao || "Nenhuma"]
+          ].forEach(([label, value]) => {
+            const row = document.createElement("p");
+            const strong = document.createElement("strong");
+            strong.textContent = `${label}: `;
+            row.append(strong, document.createTextNode(value));
+            info.appendChild(row);
+          });
+          const button = document.createElement("button");
+          button.className = "select-button";
+          button.type = "button";
+          button.textContent = "Atender paciente";
+          button.addEventListener("click", () => selecionar(index));
+          card.append(title, risk, info, button);
+          div.appendChild(card);
+        });
+      } catch (error) {
+        document.getElementById("queueCount").textContent = "Fila indisponível";
+        div.innerHTML = '<p class="empty-state error-state">Não foi possível carregar as triagens. Tente atualizar.</p>';
+      }
+    }
+
+    async function carregarMedicacoes() {
+      const [medicacoesResponse, estoqueResponse] = await Promise.all([
+        fetch("/lista-medicacoes"),
+        fetch("/estoque")
+      ]);
+      if (!medicacoesResponse.ok || !estoqueResponse.ok) throw new Error("Não foi possível carregar as medicações disponíveis.");
+      const medicacoes = await medicacoesResponse.json();
+      const estoque = await estoqueResponse.json();
+      if (!Array.isArray(medicacoes) || !Array.isArray(estoque)) throw new Error("A lista de medicações está em um formato inválido.");
+      const nomes = new Map(medicacoes.map(nome => [String(nome).toLocaleLowerCase("pt-BR"), String(nome)]));
+      estoque.forEach(item => {
+        const nome = String(item.nome || "").trim();
+        if (nome && !nomes.has(nome.toLocaleLowerCase("pt-BR"))) {
+          nomes.set(nome.toLocaleLowerCase("pt-BR"), nome);
+        }
+      });
+      const select = document.getElementById("medicacao");
+      nomes.forEach(medicacao => {
+        const option = document.createElement("option");
+        option.value = medicacao;
+        option.textContent = medicacao;
+        select.appendChild(option);
+      });
+    }
+
+    async function salvar() {
+      const formStatus = document.getElementById("formStatus");
+      const paciente = document.getElementById("paciente").value;
+      const triagemId = document.getElementById("triagemId").value;
+      const diagnostico = document.getElementById("diagnostico").value;
+      const medicacao = document.getElementById("medicacao").value;
+      const quantidade = Number(document.getElementById("quantidadeMedicacao").value);
+      const medico = document.getElementById("medicoResponsavel").value.trim();
+      const obs = document.getElementById("obs").value;
+
+      if (!paciente || !triagemId || !medicacao || !Number.isInteger(quantidade) || quantidade < 1 || !medico) {
+        formStatus.textContent = "Selecione uma triagem e uma medicação, informe a quantidade e o médico responsável.";
+        return;
+      }
+
+      const saveButton = document.getElementById("saveConsult");
+      saveButton.disabled = true;
+      salvandoConsulta = true;
+      try {
+        const response = await fetch("/consulta", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paciente, triagemId, diagnostico, medicacao, quantidade, medico, obs })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.erro || "Não foi possível salvar a consulta.");
+        formStatus.textContent = "Consulta salva com sucesso.";
+        document.getElementById("paciente").value = "";
+        document.getElementById("triagemId").value = "";
+        document.getElementById("diagnostico").value = "";
+        document.getElementById("medicacao").value = "";
+        document.getElementById("quantidadeMedicacao").value = "1";
+        document.getElementById("obs").value = "";
+        document.querySelectorAll(".triage-card").forEach(card => card.classList.remove("selected"));
+        await carregar();
+      } catch (error) {
+        formStatus.textContent = error.message || "Erro ao salvar consulta.";
+      } finally {
+        salvandoConsulta = false;
+        saveButton.disabled = false;
+      }
+    }
+
+    function selecionar(index) {
+      if (salvandoConsulta) return;
+      const triagem = triagensCarregadas[index];
+      if (!triagem) return;
+      document.getElementById("triagemId").value = triagem.id;
+      document.getElementById("paciente").value = triagem.nome || "";
+      document.getElementById("obs").value = triagem.observacao || "";
+      document.querySelectorAll(".triage-card").forEach(card => card.classList.remove("selected"));
+      document.querySelectorAll(".triage-card")[index]?.classList.add("selected");
+      const formStatus = document.getElementById("formStatus");
+      formStatus.textContent =
+        triagem.alergia && triagem.alergia.toLowerCase() !== "nenhuma"
+          ? `Atenção: alergia informada — ${triagem.alergia}`
+          : "";
+      formStatus.className = "form-status";
+    }
+
+    document.getElementById("refreshQueue").addEventListener("click", carregar);
+    document.getElementById("saveConsult").addEventListener("click", salvar);
+    carregar();
+    carregarMedicacoes().catch(error => {
+      document.getElementById("formStatus").textContent = error.message;
+    });
+  </script>
+</body>
+</html>

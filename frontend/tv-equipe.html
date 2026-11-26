@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#392f36">
+  <title>Painel clínico da equipe | Hospital Santa Luiza</title>
+  <link rel="stylesheet" href="theme.css">
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: #071a30;
+      color: #f8fbff;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      padding: clamp(18px, 3vw, 42px);
+      background:
+        radial-gradient(ellipse at 50% -20%, rgba(37, 99, 235, .35), transparent 58%),
+        linear-gradient(145deg, #0c2543, #071a30 58%, #061426);
+    }
+
+    .screen { width: min(100%, 1500px); margin: 0 auto; }
+    .topbar, .brand, .top-actions, .call-heading, .patient-meta, .risk-row {
+      display: flex;
+      align-items: center;
+    }
+    .topbar { justify-content: space-between; gap: 20px; margin-bottom: 28px; }
+    .brand { gap: 14px; }
+    .brand img { width: 52px; }
+    .brand-name { margin: 0; font-size: 1.4rem; font-weight: 750; }
+    .brand-caption { margin: 4px 0 0; color: #a9bfd9; }
+    .top-actions { gap: 12px; }
+    .top-actions a, button {
+      border: 1px solid rgba(190, 215, 245, .2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #f8fbff;
+      background: rgba(255, 255, 255, .08);
+      font: inherit;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    button:hover, .top-actions a:hover { background: rgba(255, 255, 255, .15); }
+    .panel {
+      border: 1px solid rgba(190, 215, 245, .15);
+      border-radius: 22px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .045));
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .22);
+    }
+    .login-panel { max-width: 480px; margin: 10vh auto; padding: 30px; }
+    h1, h2, h3, p { overflow-wrap: anywhere; }
+    .login-panel h1 { margin-top: 0; }
+    .login-panel label { display: block; margin: 14px 0 6px; color: #c6d6e9; }
+    .login-panel input {
+      width: 100%;
+      border: 1px solid rgba(190, 215, 245, .25);
+      border-radius: 10px;
+      padding: 12px;
+      color: #fff;
+      background: rgba(4, 17, 32, .6);
+      font: inherit;
+    }
+    .login-panel button { width: 100%; margin-top: 18px; background: #155e9b; }
+    .notice, .status { color: #a9bfd9; }
+    .notice { line-height: 1.5; }
+    .error { color: #fda4af; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr); gap: 22px; }
+    .current, .history { padding: clamp(20px, 3vw, 34px); }
+    .call-heading { justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .call-heading h1 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); }
+    .ticket { color: #7dd3fc; font-size: 1.4rem; font-weight: 800; }
+    .location { margin: 8px 0 20px; color: #a9bfd9; }
+    .patient-name { margin: 14px 0; color: #dbeafe; font-size: clamp(1.7rem, 4vw, 3rem); }
+    .patient-meta { gap: 10px 20px; flex-wrap: wrap; color: #c6d6e9; }
+    .risk-row { gap: 10px; margin: 22px 0; }
+    .risk { border-radius: 999px; padding: 7px 12px; font-weight: 800; text-transform: uppercase; }
+    .risk.vermelho { color: #fee2e2; background: #b91c1c; }
+    .risk.amarelo { color: #422006; background: #facc15; }
+    .risk.verde { color: #052e16; background: #4ade80; }
+    .risk.unknown { color: #e2e8f0; background: #475569; }
+    .section-title { margin: 24px 0 12px; font-size: 1rem; color: #a9bfd9; text-transform: uppercase; letter-spacing: .08em; }
+    .clinical-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .clinical-item, .history-entry {
+      border: 1px solid rgba(190, 215, 245, .12);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(255, 255, 255, .055);
+    }
+    .clinical-item strong, .clinical-item span { display: block; }
+    .clinical-item strong { margin-bottom: 6px; color: #a9bfd9; font-size: .85rem; }
+    #history-list { display: grid; gap: 12px; padding: 0; list-style: none; }
+    .history-entry h3 { margin: 0 0 6px; font-size: 1rem; }
+    .history-entry p { margin: 5px 0; color: #c6d6e9; }
+    .history-entry .risk { display: inline-block; padding: 4px 8px; font-size: .78rem; }
+    .empty { color: #a9bfd9; }
+    @media (max-width: 850px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .topbar { align-items: flex-start; }
+      .brand img { width: 40px; }
+      .top-actions { flex-direction: column; align-items: flex-end; }
+      .clinical-grid { grid-template-columns: 1fr; }
+      .login-panel { margin-top: 4vh; padding: 22px; }
+    }
+  </style>
+</head>
+<body class="tv-page">
+  <main class="screen">
+    <header class="topbar">
+      <div class="brand">
+        <img src="brand-mark.svg" alt="">
+        <div>
+          <p class="brand-name">Hospital Santa Luiza</p>
+          <p class="brand-caption">Painel clínico restrito à equipe</p>
+        </div>
+      </div>
+      <nav class="top-actions" aria-label="Ações">
+        <a href="tv.html" target="_blank" rel="noopener noreferrer">Abrir TV pública</a>
+        <button id="logout" type="button" hidden>Sair do painel</button>
+      </nav>
+    </header>
+
+    <section class="panel login-panel" id="login-panel">
+      <h1>Acesso da equipe</h1>
+      <p class="notice">Entre com seu usuário do hospital para consultar os dados clínicos. Esta página não deve ser exibida em monitores públicos.</p>
+      <form id="login-form">
+        <label for="usuario">Usuário</label>
+        <input id="usuario" name="usuario" autocomplete="username" required>
+        <label for="senha">Senha</label>
+        <input id="senha" name="senha" type="password" autocomplete="current-password" required>
+        <button id="login-button" type="submit">Entrar</button>
+        <p id="login-status" class="status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="clinical-panel" hidden>
+      <p id="panel-status" class="status" role="status" aria-live="polite">Carregando chamadas...</p>
+      <div class="layout">
+        <article class="panel current" id="current-call"></article>
+        <aside class="panel history">
+          <h2>Pacientes chamados anteriormente</h2>
+          <p class="status">Histórico recente com informações de triagem disponíveis.</p>
+          <ul id="history-list"></ul>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const loginForm = document.getElementById("login-form");
+    const loginPanel = document.getElementById("login-panel");
+    const clinicalPanel = document.getElementById("clinical-panel");
+    const loginStatus = document.getElementById("login-status");
+    const panelStatus = document.getElementById("panel-status");
+    const currentCall = document.getElementById("current-call");
+    const historyList = document.getElementById("history-list");
+    const logoutButton = document.getElementById("logout");
+    let credentials = null;
+    let refreshTimer = null;
+
+    function addText(parent, tag, text, className) {
+      const element = document.createElement(tag);
+      element.textContent = text;
+      if (className) element.className = className;
+      parent.appendChild(element);
+      return element;
+    }
+
+    function displayDate(value) {
+      if (!value) return "Data não informada";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? "Data não informada" : date.toLocaleString("pt-BR");
+    }
+
+    function displayRisk(value) {
+      const risk = String(value || "").toLowerCase();
+      return ["verde", "amarelo", "vermelho"].includes(risk) ? risk : "";
+    }
+
+    function renderClinicalInfo(parent, triagem) {
+      const risk = displayRisk(triagem?.risco);
+      const row = document.createElement("div");
+      row.className = "risk-row";
+      addText(row, "strong", "Classificação da pulseira:");
+      addText(row, "span", risk || "Não classificada", `risk ${risk || "unknown"}`);
+      parent.appendChild(row);
+
+      const grid = document.createElement("div");
+      grid.className = "clinical-grid";
+      [
+        ["Sintomas", triagem?.sintoma || triagem?.sintomas || "Não informado"],
+        ["Temperatura", triagem?.temperatura != null ? `${triagem.temperatura} °C` : "Não informada"],
+        ["Alergias", triagem?.alergia || "Não informadas"],
+        ["Observações", triagem?.observacao || "Nenhuma"]
+      ].forEach(([label, value]) => {
+        const item = document.createElement("div");
+        item.className = "clinical-item";
+        addText(item, "strong", label);
+        addText(item, "span", String(value));
+        grid.appendChild(item);
+      });
+      parent.appendChild(grid);
+    }
+
+    function renderCurrent(call) {
+      currentCall.replaceChildren();
+      if (!call) {
+        addText(currentCall, "h1", "Aguardando próxima chamada");
+        addText(currentCall, "p", "As informações do paciente aparecerão aqui quando houver uma chamada.");
+        return;
+      }
+
+      const heading = document.createElement("div");
+      heading.className = "call-heading";
+      addText(heading, "h1", call.paciente || "Paciente");
+      addText(heading, "span", call.senha ? `Senha ${call.senha}` : "Chamada", "ticket");
+      currentCall.appendChild(heading);
+      addText(currentCall, "p", `${call.localTipo || "Guichê"} ${call.localNumero || "--"} · ${displayDate(call.createdAt)}`, "location");
+
+      const meta = document.createElement("div");
+      meta.className = "patient-meta";
+      addText(meta, "span", `CPF: ${call.dadosPaciente?.cpf || "Não informado"}`);
+      addText(meta, "span", `Atendimento: ${call.dadosPaciente?.tipo || "Não informado"}`);
+      currentCall.appendChild(meta);
+
+      addText(currentCall, "h2", "Triagem mais recente", "section-title");
+      if (call.triagens?.length) {
+        renderClinicalInfo(currentCall, call.triagens[0]);
+        if (call.triagens.length > 1) {
+          addText(currentCall, "h2", "Triagens anteriores deste paciente", "section-title");
+          call.triagens.slice(1).forEach(triagem => renderHistoryEntry(currentCall, call, triagem));
+        }
+      } else {
+        addText(currentCall, "p", "Ainda não há triagem registrada para esta chamada.", "empty");
+      }
+    }
+
+    function renderHistoryEntry(parent, call, triagem) {
+      const entry = document.createElement("li");
+      entry.className = "history-entry";
+      addText(entry, "h3", call.paciente || "Paciente");
+      addText(entry, "p", `Senha ${call.senha || "--"} · ${call.localTipo || "Guichê"} ${call.localNumero || "--"}`);
+      addText(entry, "p", `Sintomas: ${triagem?.sintoma || triagem?.sintomas || "Não informados"}`);
+      const risk = displayRisk(triagem?.risco);
+      addText(entry, "span", risk || "Não classificada", `risk ${risk || "unknown"}`);
+      addText(entry, "p", displayDate(triagem?.createdAt));
+      parent.appendChild(entry);
+    }
+
+    function renderHistory(calls) {
+      historyList.replaceChildren();
+      const entries = Array.isArray(calls) ? calls : [];
+      if (!entries.length) {
+        addText(historyList, "li", "Nenhuma chamada anterior.", "empty");
+        return;
+      }
+
+      entries.forEach(call => {
+        if (call.triagens?.length) {
+          call.triagens.forEach(triagem => renderHistoryEntry(historyList, call, triagem));
+        } else {
+          const entry = document.createElement("li");
+          entry.className = "history-entry";
+          addText(entry, "h3", call.paciente || "Paciente");
+          addText(entry, "p", `Senha ${call.senha || "--"} · ${call.localTipo || "Guichê"} ${call.localNumero || "--"}`);
+          addText(entry, "p", "Sem triagem registrada.");
+          historyList.appendChild(entry);
+        }
+      });
+    }
+
+    async function refresh() {
+      if (!credentials) return;
+      try {
+        const response = await fetch("/tv/equipe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+          body: JSON.stringify(credentials)
+        });
+        const data = await response.json();
+        if (response.status === 401) {
+          logout();
+          loginStatus.textContent = data.erro || "Sessão encerrada. Entre novamente.";
+          loginStatus.className = "error";
+          return;
+        }
+        if (!response.ok) throw new Error(data.erro || "Não foi possível carregar o painel clínico.");
+        renderCurrent(data.chamada);
+        renderHistory(data.historico);
+        panelStatus.textContent = `Atualizado às ${new Date().toLocaleTimeString("pt-BR")}`;
+        panelStatus.className = "status";
+      } catch (error) {
+        panelStatus.textContent = error.message || "Erro ao carregar os dados clínicos.";
+        panelStatus.className = "status error";
+      }
+    }
+
+    function logout() {
+      credentials = null;
+      if (refreshTimer) clearInterval(refreshTimer);
+      refreshTimer = null;
+      clinicalPanel.hidden = true;
+      loginPanel.hidden = false;
+      logoutButton.hidden = true;
+      loginForm.reset();
+    }
+
+    loginForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const button = document.getElementById("login-button");
+      button.disabled = true;
+      loginStatus.textContent = "Verificando acesso...";
+      loginStatus.className = "status";
+      credentials = {
+        usuario: document.getElementById("usuario").value.trim(),
+        senha: document.getElementById("senha").value
+      };
+      try {
+        const response = await fetch("/tv/equipe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+          body: JSON.stringify(credentials)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.erro || "Não foi possível validar o acesso.");
+        loginStatus.textContent = "";
+        loginPanel.hidden = true;
+        clinicalPanel.hidden = false;
+        logoutButton.hidden = false;
+        renderCurrent(data.chamada);
+        renderHistory(data.historico);
+        panelStatus.textContent = "Painel clínico conectado.";
+        refreshTimer = setInterval(refresh, 5000);
+      } catch (error) {
+        credentials = null;
+        loginStatus.textContent = error.message || "Erro ao entrar no painel.";
+        loginStatus.className = "error";
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    logoutButton.addEventListener("click", logout);
+  </script>
+</body>
+</html>

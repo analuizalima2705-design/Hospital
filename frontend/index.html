@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Sistema Hospitalar</title>
+  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="theme.css">
+</head>
+<body class="login-page">
+  <div class="container">
+    <img src="brand-logo.svg" class="logo" alt="Hospital Santa Luiza">
+    <h1 class="visually-hidden">Acesso ao sistema do Hospital Santa Luiza</h1>
+
+    <form id="loginForm">
+      <label for="usuario">Usuário</label>
+      <input id="usuario" name="usuario" autocomplete="username" placeholder="Digite seu usuário" required>
+      <label for="senha">Senha</label>
+      <input id="senha" name="senha" type="password" autocomplete="current-password" placeholder="Digite sua senha" required>
+      <button type="submit">Entrar</button>
+      <p id="loginStatus" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const status = document.getElementById("loginStatus");
+      const button = event.currentTarget.querySelector("button");
+      button.disabled = true;
+      status.textContent = "Verificando acesso...";
+      try {
+        const response = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            usuario: document.getElementById("usuario").value.trim(),
+            senha: document.getElementById("senha").value
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.erro || "Login inválido");
+        localStorage.setItem("hospitalar_user", JSON.stringify({
+          usuario: data.usuario,
+          nome: data.usuario,
+          tipo: data.tipo
+        }));
+        const destinations = {
+          triagem: "triagem.html",
+          medico: "medico.html",
+          atendimento: "atendimento.html"
+        };
+        if (!destinations[data.tipo]) throw new Error("Tipo de usuário não reconhecido.");
+        window.location.href = destinations[data.tipo];
+      } catch (error) {
+        status.textContent = error.message || "Erro ao fazer login.";
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    window.addEventListener("keydown", function (e) {
+      if (e.ctrlKey && e.altKey && (e.key === "a" || e.key === "A")) {
+        window.location.href = "adimin.html";
+      }
+    });
+  </script>
+</body>
+</html>

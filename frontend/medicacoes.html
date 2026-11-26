@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#76616d">
+    <title>Medicações prescritas | Hospital Santa Luiza</title>
+    <link rel="stylesheet" href="medicacoes.css">
+    <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+    <main class="workspace">
+        <header class="page-header">
+            <a class="brand" href="index.html">
+                <img src="brand-mark.svg" alt="" class="brand-logo">
+                <span><strong>Hospital Santa Luiza</strong><small>Prescrições e acompanhamento</small></span>
+            </a>
+            <nav class="page-nav" aria-label="Navegação principal">
+                <a href="atendimento.html">Atendimento</a>
+                <a href="triagem.html">Triagem</a>
+                <a href="medico.html">Painel médico</a>
+                <a href="almoxarifado.html">Almoxarifado</a>
+                <a href="index.html">Sair</a>
+            </nav>
+        </header>
+
+        <section class="page-intro">
+            <div>
+                <p class="eyebrow">Área assistencial</p>
+                <h1>Medicações prescritas</h1>
+                <p class="intro-copy">Consulte as prescrições registradas e localize rapidamente um paciente.</p>
+            </div>
+            <button class="secondary-button" id="refreshButton" type="button">Atualizar prescrições</button>
+        </section>
+
+        <section class="summary-grid" aria-label="Resumo das prescrições">
+            <article class="summary-card">
+                <span>Pacientes</span>
+                <strong id="totalPacientes">0</strong>
+            </article>
+            <article class="summary-card">
+                <span>Prescrições</span>
+                <strong id="totalMedicacoes">0</strong>
+            </article>
+        </section>
+
+        <section class="panel">
+            <div class="list-toolbar">
+                <div>
+                    <h2>Histórico de prescrições</h2>
+                    <p id="listStatus" role="status" aria-live="polite">Carregando prescrições...</p>
+                </div>
+                <label class="search-field" for="pesquisa">
+                    <span>Buscar paciente</span>
+                    <input type="search" id="pesquisa" placeholder="Digite o nome do paciente" autocomplete="off">
+                </label>
+            </div>
+            <div id="listaMedicacoes" class="prescription-list" aria-live="polite"></div>
+        </section>
+    </main>
+
+    <script>
+        let consultas = [];
+        const searchInput = document.getElementById("pesquisa");
+        const list = document.getElementById("listaMedicacoes");
+        const listStatus = document.getElementById("listStatus");
+
+        function createTextElement(tag, text, className) {
+            const element = document.createElement(tag);
+            element.textContent = text;
+            if (className) element.className = className;
+            return element;
+        }
+
+        function formatDate(value) {
+            const date = new Date(value);
+            return value && !Number.isNaN(date.getTime())
+                ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(date)
+                : "Data não informada";
+        }
+
+        function renderizar() {
+            const query = searchInput.value.trim().toLocaleLowerCase("pt-BR");
+            const filtered = consultas.filter(item =>
+                String(item.paciente || "").toLocaleLowerCase("pt-BR").includes(query)
+            );
+            list.replaceChildren();
+
+            if (!filtered.length) {
+                const empty = document.createElement("p");
+                empty.className = "empty-state";
+                empty.textContent = consultas.length
+                    ? "Nenhuma prescrição corresponde à busca."
+                    : "Nenhuma medicação prescrita foi registrada.";
+                list.appendChild(empty);
+                return;
+            }
+
+            filtered.forEach((consulta, index) => {
+                const card = document.createElement("article");
+                card.className = "prescription-card";
+                const header = document.createElement("div");
+                header.className = "card-header";
+                header.append(
+                    createTextElement("h3", consulta.paciente || "Paciente sem nome"),
+                    createTextElement("time", formatDate(consulta.createdAt))
+                );
+                const medication = document.createElement("p");
+                medication.className = "prescription-medication";
+                medication.append(
+                    createTextElement("strong", "Medicação: "),
+                    document.createTextNode(`${consulta.medicacao || "Não informada"} · Quantidade: ${Number.isInteger(Number(consulta.quantidade)) && Number(consulta.quantidade) > 0 ? consulta.quantidade : "não informada"}`)
+                );
+                const diagnosis = document.createElement("p");
+                diagnosis.append(createTextElement("strong", "Diagnóstico: "), document.createTextNode(consulta.diagnostico || "Não informado"));
+                const notes = document.createElement("p");
+                notes.append(createTextElement("strong", "Observações: "), document.createTextNode(consulta.obs || "Nenhuma observação."));
+                const doctor = createTextElement("p", `Médico responsável: ${consulta.medico || "Não informado"}`);
+                card.setAttribute("aria-label", `Prescrição ${index + 1} para ${consulta.paciente || "paciente"}`);
+                card.append(header, medication, diagnosis, notes, doctor);
+                if (consulta.dispensado) {
+                    card.appendChild(createTextElement("p", `Dispensado em ${formatDate(consulta.dispensadoAt)}.`));
+                } else if (Number.isInteger(Number(consulta.quantidade)) && Number(consulta.quantidade) > 0) {
+                    card.appendChild(createTextElement("p", "Aguardando confirmação da dispensação."));
+                    const dispense = document.createElement("button");
+                    dispense.type = "button";
+                    dispense.className = "secondary-button";
+                    dispense.textContent = "Confirmar dispensação";
+                    dispense.addEventListener("click", () => confirmarDispensacao(consulta, dispense));
+                    card.appendChild(dispense);
+                } else {
+                    card.appendChild(createTextElement("p", "Dispensação indisponível: quantidade não informada."));
+                }
+                list.appendChild(card);
+            });
+        }
+
+        async function confirmarDispensacao(consulta, button) {
+            if (!window.confirm(`Confirmar a dispensação de ${consulta.quantidade} unidade(s) de ${consulta.medicacao} para ${consulta.paciente}?`)) return;
+            button.disabled = true;
+            try {
+                const response = await fetch(`/consultas/${encodeURIComponent(consulta.id)}/dispensar`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({})
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.erro || "Não foi possível confirmar a dispensação.");
+                await carregarMedicacoes();
+            } catch (error) {
+                window.alert(error.message || "Erro ao confirmar a dispensação.");
+                button.disabled = false;
+            }
+        }
+
+        async function carregarMedicacoes() {
+            const button = document.getElementById("refreshButton");
+            button.disabled = true;
+            listStatus.textContent = "Atualizando prescrições...";
+            try {
+                const response = await fetch("/medicacoes", { cache: "no-store" });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.erro || "Não foi possível carregar as prescrições.");
+                if (!Array.isArray(data)) throw new Error("A resposta de prescrições está em um formato inválido.");
+                consultas = data.filter(item => String(item.medicacao || "").trim());
+                const patients = new Set(consultas.map(item =>
+                    String(item.paciente || "").trim().toLocaleLowerCase("pt-BR")
+                ).filter(Boolean));
+                document.getElementById("totalPacientes").textContent = patients.size;
+                document.getElementById("totalMedicacoes").textContent = consultas.length;
+                listStatus.textContent = `${consultas.length} ${consultas.length === 1 ? "prescrição encontrada" : "prescrições encontradas"}`;
+                renderizar();
+            } catch (error) {
+                listStatus.textContent = error.message || "Erro ao carregar as prescrições.";
+                list.replaceChildren();
+                const empty = document.createElement("p");
+                empty.className = "empty-state error-state";
+                empty.textContent = listStatus.textContent;
+                list.appendChild(empty);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        searchInput.addEventListener("input", renderizar);
+        document.getElementById("refreshButton").addEventListener("click", carregarMedicacoes);
+        carregarMedicacoes();
+        window.setInterval(carregarMedicacoes, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#76616d">
+    <title>Triagem | Hospital Santa Luiza</title>
+    <link rel="stylesheet" href="triagem.css">
+    <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+    <main class="workspace">
+        <header class="page-header">
+            <a class="brand" href="index.html">
+                <img src="brand-mark.svg" alt="" class="brand-logo">
+                <span><strong>Hospital Santa Luiza</strong><small>Triagem e classificação</small></span>
+            </a>
+            <nav class="page-nav" aria-label="Navegação principal">
+                <a href="atendimento.html">Atendimento</a>
+                <a href="medico.html">Painel médico</a>
+                <a href="medicacoes.html">Medicações</a>
+                <a href="tv.html" target="_blank" rel="noopener noreferrer">Painel de chamadas</a>
+                <a href="index.html">Sair</a>
+            </nav>
+        </header>
+
+        <section class="page-intro">
+            <div>
+                <p class="eyebrow">Área assistencial</p>
+                <h1>Triagem hospitalar</h1>
+                <p class="intro-copy">Chame o próximo paciente, registre os sinais e encaminhe a triagem à equipe médica.</p>
+            </div>
+            <button class="secondary-button" id="refreshQueue" type="button">Atualizar fila</button>
+        </section>
+
+        <section class="triage-layout">
+            <section class="panel queue-panel" aria-labelledby="queue-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Aguardando atendimento</p>
+                        <h2 id="queue-title">Fila de pacientes</h2>
+                        <p id="queueSummary" role="status" aria-live="polite">Carregando fila...</p>
+                    </div>
+                </div>
+                <div id="fila" class="patient-list" aria-live="polite"></div>
+            </section>
+
+            <section class="panel form-panel" aria-labelledby="form-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Registro clínico</p>
+                        <h2 id="form-title">Dados da triagem</h2>
+                    </div>
+                </div>
+                <form id="triageForm">
+                    <input id="pacienteId" type="hidden">
+                    <label for="nome">Paciente selecionado</label>
+                    <input id="nome" placeholder="Escolha um paciente na fila" readonly required>
+
+                    <label for="sintomas">Sintoma principal</label>
+                    <select id="sintomas" required>
+                        <option value="">Selecione o sintoma</option>
+                        <option value="febre">Febre</option>
+                        <option value="tosse">Tosse</option>
+                        <option value="falta_ar">Falta de ar</option>
+                        <option value="dor_peito">Dor no peito</option>
+                        <option value="dor_cabeca">Dor de cabeça</option>
+                        <option value="vomito">Vômito</option>
+                        <option value="diarreia">Diarreia</option>
+                        <option value="calafrios">Calafrios</option>
+                        <option value="outros">Outros</option>
+                    </select>
+
+                    <label for="temperatura">Temperatura (°C)</label>
+                    <input id="temperatura" type="number" min="30" max="45" step="0.1" inputmode="decimal" placeholder="Ex.: 36,8" required>
+
+                    <label for="alergia">Alergias</label>
+                    <input id="alergia" maxlength="160" placeholder="Informe alergias ou escreva “Nenhuma”">
+
+                    <label for="observacao">Observações</label>
+                    <textarea id="observacao" maxlength="500" placeholder="Informações relevantes para a equipe"></textarea>
+
+                    <button class="primary-button" id="saveTriage" type="submit">Salvar e encaminhar ao médico</button>
+                    <p id="formStatus" class="form-status" role="status" aria-live="polite"></p>
+                </form>
+            </section>
+        </section>
+    </main>
+
+    <script>
+        const queue = document.getElementById("fila");
+        const queueSummary = document.getElementById("queueSummary");
+        const form = document.getElementById("triageForm");
+        const formStatus = document.getElementById("formStatus");
+        const saveButton = document.getElementById("saveTriage");
+
+        async function readResponse(response) {
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.erro || "Não foi possível concluir a solicitação.");
+            return data;
+        }
+
+        async function carregarPacientes() {
+            queueSummary.textContent = "Atualizando fila...";
+            queue.replaceChildren();
+            try {
+                const response = await fetch("/pacientes-triagem");
+                const pacientes = await readResponse(response);
+                if (!Array.isArray(pacientes)) throw new Error("A resposta da fila está em um formato inválido.");
+                queueSummary.textContent = `${pacientes.length} ${pacientes.length === 1 ? "paciente aguardando" : "pacientes aguardando"}`;
+                if (!pacientes.length) {
+                    queue.textContent = "Nenhum paciente aguardando triagem.";
+                    queue.className = "patient-list empty-state";
+                    return;
+                }
+
+                queue.className = "patient-list";
+                pacientes.forEach(paciente => {
+                    const item = document.createElement("article");
+                    item.className = "patient-card";
+                    const details = document.createElement("div");
+                    const name = document.createElement("h3");
+                    const meta = document.createElement("p");
+                    const button = document.createElement("button");
+                    name.textContent = paciente.nome || "Paciente sem nome";
+                    meta.textContent = `Senha ${paciente.senha || "—"} · ${paciente.tipo || "Atendimento não informado"}`;
+                    button.type = "button";
+                    button.className = "select-button";
+                    button.textContent = "Atender";
+                    button.addEventListener("click", () => chamar(paciente));
+                    details.append(name, meta);
+                    item.append(details, button);
+                    queue.appendChild(item);
+                });
+            } catch (error) {
+                queueSummary.textContent = "Fila indisponível";
+                queue.className = "patient-list empty-state error-state";
+                queue.textContent = error.message || "Não foi possível carregar a fila.";
+            }
+        }
+
+        async function chamar(paciente) {
+            formStatus.textContent = "";
+            try {
+                const response = await fetch(`/chamar-triagem/${encodeURIComponent(paciente.id)}`, { method: "PUT" });
+                const chamado = await readResponse(response);
+                document.getElementById("pacienteId").value = chamado.id;
+                document.getElementById("nome").value = chamado.nome || "";
+                formStatus.textContent = "Paciente chamado. Preencha os dados da triagem.";
+                formStatus.className = "form-status success-message";
+                await carregarPacientes();
+            } catch (error) {
+                formStatus.textContent = error.message || "Erro ao chamar paciente.";
+                formStatus.className = "form-status error-message";
+            }
+        }
+
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+            if (!form.reportValidity()) return;
+            const pacienteId = document.getElementById("pacienteId").value;
+            if (!pacienteId) {
+                formStatus.textContent = "Selecione um paciente na fila antes de salvar.";
+                formStatus.className = "form-status error-message";
+                return;
+            }
+
+            saveButton.disabled = true;
+            formStatus.textContent = "Salvando triagem...";
+            formStatus.className = "form-status";
+            try {
+                const response = await fetch("/triagem", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        pacienteId,
+                        nome: document.getElementById("nome").value,
+                        sintoma: document.getElementById("sintomas").value,
+                        temperatura: document.getElementById("temperatura").value || 0,
+                        alergia: document.getElementById("alergia").value.trim(),
+                        observacao: document.getElementById("observacao").value.trim()
+                    })
+                });
+                const triagem = await readResponse(response);
+                form.reset();
+                formStatus.textContent = `Triagem encaminhada ao médico. Classificação: ${triagem.risco || "não informada"}.`;
+                formStatus.className = "form-status success-message";
+                await carregarPacientes();
+            } catch (error) {
+                formStatus.textContent = error.message || "Erro ao salvar triagem.";
+                formStatus.className = "form-status error-message";
+            } finally {
+                saveButton.disabled = false;
+            }
+        });
+
+        document.getElementById("refreshQueue").addEventListener("click", carregarPacientes);
+        carregarPacientes();
+    </script>
+</body>
+</html>
